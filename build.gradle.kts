@@ -20,6 +20,8 @@ repositories {
 extra["springCloudVersion"] = "2024.0.1"
 
 dependencies {
+    // Swagger (SpringDoc) -
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")

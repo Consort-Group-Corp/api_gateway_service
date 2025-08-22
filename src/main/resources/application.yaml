@@ -13,15 +13,56 @@ spring:
               /api/v1/password/**, /api/v1/super-admin/**,
               /api/v1/users/**, /api/v1/device-tokens/**,
               /api/v1/users/notifications/**,
-              /api/v1/user-notifications/**,
-              /api/v1/users/**,
-              /swagger-ui/**,
-              /v3/api-docs/**
+              /api/v1/user-notifications/**
 
+        - id: forum-service
+          uri: lb://forum-service
+          predicates:
+            - Path=/api/v1/forum/forum-comment/**, /api/v1/forums/**, /api/v1/forum/forum-topic/**
+
+        - id: webinar-service
+          uri: lb://webinar-service
+          predicates:
+            - Path=/api/v1/webinars/**
+
+        - id: user-swagger
+          uri: lb://user-service
+          predicates:
+            - Path=/user/v3/api-docs/**
+          filters:
+            - RewritePath=/user/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+
+        - id: forum-swagger
+          uri: lb://forum-service
+          predicates:
+            - Path=/forum/v3/api-docs/**
+          filters:
+            - RewritePath=/forum/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+
+        - id: webinar-swagger
+          uri: lb://webinar-service
+          predicates:
+            - Path=/webinar/v3/api-docs/**
+          filters:
+            - RewritePath=/webinar/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: user-service
+        url: /user/v3/api-docs
+      - name: forum-service
+        url: /forum/v3/api-docs
+      - name: webinar-service
+        url: /webinar/v3/api-docs
+    urls-primary-name: forum-service
+    try-it-out-enabled: true
+
 
 eureka:
   client:

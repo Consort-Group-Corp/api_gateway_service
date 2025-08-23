@@ -8,8 +8,7 @@ spring:
         - id: user-auth
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/auth/**, /api/v1/users/course-orders/**,
-              /api/v1/hr/**, /api/v1/mentor/**, /api/v1/oneid/**,
+            - Path=/api/v1/auth/**, /api/v1/hr/**, /api/v1/mentor/**, /api/v1/oneid/**,
               /api/v1/password/**, /api/v1/super-admin/**,
               /api/v1/users/**, /api/v1/device-tokens/**,
               /api/v1/users/notifications/**,
@@ -24,6 +23,11 @@ spring:
           uri: lb://webinar-service
           predicates:
             - Path=/api/v1/webinars/**
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/orders/**, /api/v1/click/**, /api/v1/paycom/**
 
         - id: user-swagger
           uri: lb://user-service
@@ -45,6 +49,13 @@ spring:
             - Path=/webinar/v3/api-docs/**
           filters:
             - RewritePath=/webinar/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+
+        - id: payment-swagger
+          uri: lb://payment-service
+          predicates:
+            - Path=/payment/v3/api-docs/**
+          filters:
+            - RewritePath=/payment/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
       discovery:
         locator:
           enabled: true
@@ -60,6 +71,8 @@ springdoc:
         url: /forum/v3/api-docs
       - name: webinar-service
         url: /webinar/v3/api-docs
+      - name: payment-service
+        url: /payment/v3/api-docs
     urls-primary-name: forum-service
     try-it-out-enabled: true
 

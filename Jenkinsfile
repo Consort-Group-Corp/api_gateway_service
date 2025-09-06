@@ -2,22 +2,20 @@ pipeline {
   agent any
   options { timestamps() }
 
-  tools {
-    jdk 'jdk-21'
-    gradle 'gradle-8'
-  }
-
   triggers {
     githubPush()
   }
 
   environment {
-    SERVICE_NAME   = 'api-gateway-service'
-    CONTAINER_NAME = 'consort-api-gateway'
+    SERVICE_NAME   = 'eureka-service'
+    CONTAINER_NAME = 'consort-eureka-service'
     DOCKER_NETWORK = 'consort-infra_consort-network'
-    LOGS_DIR       = '/app/logs/api-gateway'
+    LOGS_DIR       = '/app/logs/eureka'
     ENV_FILE       = '/var/jenkins_home/.env'
-    PORT           = '8085'
+    PORT           = '8762'
+    JAVA_HOME      = tool 'jdk-21'
+    GRADLE_HOME    = tool 'gradle-8'
+    PATH           = "${env.JAVA_HOME}/bin:${env.GRADLE_HOME}/bin:${env.PATH}"
   }
 
   stages {
@@ -36,12 +34,18 @@ pipeline {
       steps {
         script {
           def rd = { k -> sh(script: "grep -E '^${k}=' ${env.ENV_FILE} | head -n1 | cut -d= -f2- || true", returnStdout: true).trim() }
-          env.SECURITY_TOKEN    = rd('SECURITY_TOKEN')    ?: ''
+          env.SECURITY_TOKEN = rd('SECURITY_TOKEN') ?: ''
         }
       }
     }
 
     stage('Build core_api_dto to local maven') {
+      when {
+        expression {
+          return fileExists('build.gradle') &&
+                 sh(script: 'grep -q "core_api_dto" build.gradle', returnStatus: true) == 0
+        }
+      }
       steps {
         dir("${env.WORKSPACE}@core-dto") {
           sh '''
@@ -85,6 +89,40 @@ pipeline {
         sh '''
           set -e
           mkdir -p ${LOGS_DIR} || true
+          mkdir -p /app/config/eureka || true
+
+          # Создаем минимальный application.yml для Eureka
+          cat > /app/config/eureka/application.yml << 'EOF'
+server:
+  port: 8762
+
+spring:
+  application:
+    name: eureka-service
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8762/eureka/
+  server:
+    enable-self-preservation: false
+    wait-time-in-ms-when-sync-empty: 0
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    non-secure-port: 8762
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+EOF
 
           docker stop ${CONTAINER_NAME} || true
           docker rm ${CONTAINER_NAME} || true
@@ -93,11 +131,13 @@ pipeline {
             --name ${CONTAINER_NAME} \
             --network ${DOCKER_NETWORK} \
             -p ${PORT}:${PORT} \
-            -v ${LOGS_DIR}:/var/log/api-gateway \
+            -v ${LOGS_DIR}:/var/log/eureka \
+            -v /app/config/eureka:/app/config \  # ← ДОБАВЛЕНО МОНТИРОВАНИЕ КОНФИГА
             -e SPRING_PROFILES_ACTIVE=dev \
             -e SERVER_PORT=${PORT} \
-            -e SPRING_CLOUD_EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-service:8762/eureka/ \
-            -e SECURITY_TOKEN=${SECURITY_TOKEN} \
+            -e EUREKA_INSTANCE_HOSTNAME=localhost \  # ← ИСПРАВЛЕНО НА localhost
+            -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8762/eureka/ \  # ← ДОБАВЛЕНО
+            -e EUREKA_INSTANCE_NON_SECURE_PORT=8762 \  # ← ДОБАВЛЕНО
             ${IMAGE_TAG}
 
           echo "✅ Deployed ${CONTAINER_NAME} with image ${IMAGE_TAG} on port ${PORT}"

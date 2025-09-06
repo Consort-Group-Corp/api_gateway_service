@@ -7,12 +7,12 @@ pipeline {
   }
 
   environment {
-    SERVICE_NAME   = 'eureka-service'
-    CONTAINER_NAME = 'consort-eureka-service'
+    SERVICE_NAME   = 'api-gateway-service'
+    CONTAINER_NAME = 'consort-api-gateway'
     DOCKER_NETWORK = 'consort-infra_consort-network'
-    LOGS_DIR       = '/app/logs/eureka'
+    LOGS_DIR       = '/app/logs/api-gateway'
     ENV_FILE       = '/var/jenkins_home/.env'
-    PORT           = '8762'
+    PORT           = '8085'
     JAVA_HOME      = tool 'jdk-21'
     GRADLE_HOME    = tool 'gradle-8'
     PATH           = "${env.JAVA_HOME}/bin:${env.GRADLE_HOME}/bin:${env.PATH}"
@@ -89,39 +89,14 @@ pipeline {
         sh '''
           set -e
           mkdir -p ${LOGS_DIR} || true
-          mkdir -p /app/config/eureka || true
+          mkdir -p /app/config/api-gateway || true
 
-          # Создаем минимальный application.yml для Eureka
-          cat > /app/config/eureka/application.yml << 'EOF'
-server:
-  port: 8762
-
+          cat > /app/config/api-gateway/application.yml << 'EOF'
 spring:
-  application:
-    name: eureka-service
-
-eureka:
-  client:
-    register-with-eureka: false
-    fetch-registry: false
-    service-url:
-      defaultZone: http://localhost:8762/eureka/
-  server:
-    enable-self-preservation: false
-    wait-time-in-ms-when-sync-empty: 0
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-    non-secure-port: 8762
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-dev.yaml
 EOF
 
           docker stop ${CONTAINER_NAME} || true
@@ -131,13 +106,12 @@ EOF
             --name ${CONTAINER_NAME} \
             --network ${DOCKER_NETWORK} \
             -p ${PORT}:${PORT} \
-            -v ${LOGS_DIR}:/var/log/eureka \
-            -v /app/config/eureka:/app/config \  # ← ДОБАВЛЕНО МОНТИРОВАНИЕ КОНФИГА
+            -v ${LOGS_DIR}:/var/log/api-gateway \
+            -v /app/config/api-gateway:/app/config \
             -e SPRING_PROFILES_ACTIVE=dev \
             -e SERVER_PORT=${PORT} \
-            -e EUREKA_INSTANCE_HOSTNAME=localhost \  # ← ИСПРАВЛЕНО НА localhost
-            -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8762/eureka/ \  # ← ДОБАВЛЕНО
-            -e EUREKA_INSTANCE_NON_SECURE_PORT=8762 \  # ← ДОБАВЛЕНО
+            -e SPRING_CLOUD_EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-service:8762/eureka/ \
+            -e SECURITY_TOKEN=${SECURITY_TOKEN} \
             ${IMAGE_TAG}
 
           echo "✅ Deployed ${CONTAINER_NAME} with image ${IMAGE_TAG} on port ${PORT}"

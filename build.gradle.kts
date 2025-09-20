@@ -14,20 +14,29 @@ java {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 extra["springCloudVersion"] = "2024.0.1"
 
 dependencies {
-    // Swagger (SpringDoc) -
-    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
+
+
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
+    implementation("uz.consortgroup:core-api-dto:0.0.1")
+
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
 }
+
 
 dependencyManagement {
     imports {

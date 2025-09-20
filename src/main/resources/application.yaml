@@ -2,6 +2,9 @@ server:
   port: 8085
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
+
   cloud:
     gateway:
       routes:
@@ -94,6 +97,12 @@ management:
     web:
       exposure:
         include: health,info,metrics,gateway
+
+security:
+  token: ${SECURITY_TOKEN}
+  clock-skew-seconds: 60
+  token-base64: true
+  max-access-token-ttl-seconds: 3600
 
 logging:
   level:

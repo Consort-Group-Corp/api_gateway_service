@@ -2,6 +2,9 @@ server:
   port: 8085
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
+
   application:
     name: api-gateway-service
   cloud:
@@ -40,6 +43,11 @@ spring:
           predicates:
             - Path=/api/v1/orders/**, /api/v1/click/**, /api/v1/paycom/**
 
+        - id: support-service
+          uri: lb://support-service
+          predicates:
+            - Path=/api/v1/support/**
+
         - id: user-swagger
           uri: lb://user-service
           predicates:
@@ -64,6 +72,12 @@ spring:
             - Path=/payment/v3/api-docs/**
           filters:
             - RewritePath=/payment/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+        - id: support-swagger
+          uri: lb://support-service
+          predicates:
+            - Path=/support/v3/api-docs/**
+          filters:
+            - RewritePath=/support/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
       discovery:
         locator:
           enabled: true
@@ -81,8 +95,16 @@ springdoc:
         url: /webinar/v3/api-docs
       - name: payment-service
         url: /payment/v3/api-docs
+      - name: support_service
+        url: /support/v3/api-docs
     urls-primary-name: forum-service
     try-it-out-enabled: true
+
+security:
+  token: ${SECURITY_TOKEN}
+  token-base64: true
+  clock-skew-seconds: 60
+  max-access-token-ttl-seconds: 3600
 
 eureka:
   client:

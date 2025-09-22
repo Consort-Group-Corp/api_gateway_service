@@ -9,7 +9,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 10) // РАНЬШЕ IdentityPropagationFilter
+@Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class StripClientIdentityHeadersFilter implements GlobalFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, org.springframework.cloud.gateway.filter.GatewayFilterChain chain) {

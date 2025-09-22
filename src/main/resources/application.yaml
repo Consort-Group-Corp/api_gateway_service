@@ -11,16 +11,17 @@ spring:
         - id: user-auth
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/auth/**, /api/v1/hr/**, /api/v1/mentor/**, /api/v1/oneid/**,
-              /api/v1/password/**, /api/v1/super-admin/**,
-              /api/v1/users/**, /api/v1/device-tokens/**,
-              /api/v1/users/notifications/**,
-              /api/v1/user-notifications/**
+            - Path=/api/v1/auth/**,/api/v1/oneid/**,/api/v1/password/**,/api/v1/super-admin/**,/api/v1/users/**,/api/v1/device-tokens/**,/api/v1/users/notifications/**,/api/v1/user-notifications/**
 
         - id: forum-service
           uri: lb://forum-service
           predicates:
-            - Path=/api/v1/forum/forum-comment/**, /api/v1/forums/**, /api/v1/forum/forum-topic/**
+            - Path=/api/v1/forum/forum-comment/**,/api/v1/forums/**,/api/v1/forum/forum-topic/**,/api/v1/forum/likes/**,/api/v1/forum/complaints/**,/api/v1/forum/moderation/**,/api/v1/forum/forbidden-words/**
+
+        - id: course-service
+          uri: lb://course-service
+          predicates:
+            - Path=/api/v1/courses/**,/api/v1/lessons/**
 
         - id: webinar-service
           uri: lb://webinar-service
@@ -30,35 +31,56 @@ spring:
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/api/v1/orders/**, /api/v1/click/**, /api/v1/paycom/**
+            - Path=/api/v1/orders/**,/api/v1/click/**,/api/v1/paycom/**
 
+        - id: support-service
+          uri: lb://support-service
+          predicates:
+            - Path=/api/v1/support/**
+
+        # Swagger routes
         - id: user-swagger
           uri: lb://user-service
           predicates:
             - Path=/user/v3/api-docs/**
           filters:
-            - RewritePath=/user/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+            - RewritePath=/user/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
 
         - id: forum-swagger
           uri: lb://forum-service
           predicates:
             - Path=/forum/v3/api-docs/**
           filters:
-            - RewritePath=/forum/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+            - RewritePath=/forum/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+
+        - id: course-swagger
+          uri: lb://course-service
+          predicates:
+            - Path=/course/v3/api-docs/**
+          filters:
+            - RewritePath=/course/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
 
         - id: webinar-swagger
           uri: lb://webinar-service
           predicates:
             - Path=/webinar/v3/api-docs/**
           filters:
-            - RewritePath=/webinar/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+            - RewritePath=/webinar/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
 
         - id: payment-swagger
           uri: lb://payment-service
           predicates:
             - Path=/payment/v3/api-docs/**
           filters:
-            - RewritePath=/payment/v3/api-docs(?<rem>/?.*), /v3/api-docs${rem}
+            - RewritePath=/payment/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+
+        - id: support-swagger
+          uri: lb://support-service
+          predicates:
+            - Path=/support/v3/api-docs/**
+          filters:
+            - RewritePath=/support/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+
       discovery:
         locator:
           enabled: true
@@ -70,15 +92,18 @@ springdoc:
     urls:
       - name: user-service
         url: /user/v3/api-docs
+      - name: course-service
+        url: /course/v3/api-docs
       - name: forum-service
         url: /forum/v3/api-docs
       - name: webinar-service
         url: /webinar/v3/api-docs
       - name: payment-service
         url: /payment/v3/api-docs
+      - name: support-service
+        url: /support/v3/api-docs
     urls-primary-name: forum-service
     try-it-out-enabled: true
-
 
 eureka:
   client:

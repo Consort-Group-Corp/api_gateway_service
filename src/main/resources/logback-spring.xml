@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+    <!-- Имя сервиса из Spring -->
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <!-- Переопределяемые параметры через env -->
+    <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+    <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+    <property name="MAX_FILE_SIZE" value="${MAX_FILE_SIZE:-100MB}"/>
+    <property name="TOTAL_SIZE_CAP" value="${TOTAL_SIZE_CAP:-10GB}"/>
+    <property name="MAX_HISTORY_DAYS" value="${MAX_HISTORY_DAYS:-30}"/>
+
+    <!-- Консоль (для Docker/K8s и локалки) -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- UTC, traceId/spanId из MDC (Sleuth/OTel), PID -->
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS,UTC} %-5level [%thread] pid=%property{PID} trace=%X{traceId:-}-\%X{spanId:-} %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Файл с ротацией по времени и размеру -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${appName}/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- .gz для экономии места -->
+            <fileNamePattern>${LOG_DIR}/${appName}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            <maxHistory>${MAX_HISTORY_DAYS}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS,UTC} %-5level [%thread] pid=%property{PID} trace=%X{traceId:-}-\%X{spanId:-} %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Отдельный файл только для ERROR -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${appName}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${appName}/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            <maxHistory>${MAX_HISTORY_DAYS}</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS,UTC} %-5level [%thread] pid=%property{PID} trace=%X{traceId:-}-\%X{spanId:-} %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Асинхронные обёртки (чтоб не блокировать поток приложений на I/O) -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE"/>
+        <queueSize>8192</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="ERROR_FILE"/>
+        <queueSize>4096</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- Уровни логирования можно править через LOG_LEVEL -->
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
+    </root>
+</configuration>

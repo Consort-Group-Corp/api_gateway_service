@@ -85,59 +85,9 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/users/*/verification").permitAll()
                         .pathMatchers("/api/v1/users/*/new-verification-code").permitAll()
                         .pathMatchers("/api/v1/users/*/new-password").permitAll()
-                        .pathMatchers(
-                                "/v3/api-docs/**",
-                                "/v3/api-docs/swagger-config",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
-                                "/actuator/health",
-                                "/actuator/health/**"
-                        ).permitAll()
 
                         // auth
                         .pathMatchers("/api/v1/auth/**").permitAll()
-
-                        // --- support-service ---
-                        // Пресеты тикетов - доступны всем аутентифицированным
-                        .pathMatchers(HttpMethod.GET, "/api/v1/support/presets")
-                        .authenticated()
-
-                        // Создание тикетов - доступно всем аутентифицированным
-                        .pathMatchers(HttpMethod.POST, "/api/v1/support/tickets")
-                        .authenticated()
-
-                        // Управление пресетами (Super Admin) - только SUPER_ADMIN
-                        .pathMatchers("/api/v1/support/presets/super-admin/**")
-                        .hasAuthority("SUPER_ADMIN")
-
-                        // Просмотр и управление тикетами - только SUPPORT и SUPER_ADMIN
-                        .pathMatchers(HttpMethod.GET, "/api/v1/support/tickets")
-                        .hasAnyAuthority("SUPER_ADMIN", "SUPPORT")
-                        .pathMatchers(HttpMethod.PUT, "/api/v1/support/tickets/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "SUPPORT")
-
-                        // --- course-service ---
-                        .pathMatchers(HttpMethod.POST, "/api/v1/courses/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.DELETE, "/api/v1/courses/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/courses/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
-                        .pathMatchers(HttpMethod.POST, "/api/v1/lessons/**/images/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.POST, "/api/v1/lessons/**/pdfs/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.POST, "/api/v1/lessons/**/videos/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.DELETE, "/api/v1/lessons/**/images/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.DELETE, "/api/v1/lessons/**/pdfs/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.DELETE, "/api/v1/lessons/**/videos/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/lessons/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
 
                         // --- payment-service --- (доступ всем)
                         .pathMatchers("/api/v1/click/**").permitAll()
@@ -145,47 +95,44 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/orders/**").permitAll()
 
                         // --- webinar-service ---
-                        // Создание, обновление, удаление вебинаров - для MENTOR и SUPER_ADMIN
-                        .pathMatchers(HttpMethod.POST, "/api/v1/webinars/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.PUT, "/api/v1/webinars/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
-                        .pathMatchers(HttpMethod.DELETE, "/api/v1/webinars/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/webinars/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.PUT, "/api/v1/webinars/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.DELETE, "/api/v1/webinars/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/webinars/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
 
-                        // Просмотр вебинаров - для всех аутентифицированных
-                        .pathMatchers(HttpMethod.GET, "/api/v1/webinars/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
+                        // --- support-service ---
+                        .pathMatchers(HttpMethod.GET, "/api/v1/support/presets").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/support/tickets").authenticated()
+                        .pathMatchers("/api/v1/support/presets/super-admin/**").hasAuthority("SUPER_ADMIN")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/support/tickets").hasAnyAuthority("SUPER_ADMIN", "SUPPORT")
+                        .pathMatchers(HttpMethod.PUT, "/api/v1/support/tickets/**").hasAnyAuthority("SUPER_ADMIN", "SUPPORT")
 
+                        // --- course-service ---
+                        .pathMatchers(HttpMethod.POST, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.DELETE, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
+
+                        // Исправленные пути для медиа-файлов уроков
+                        .pathMatchers(HttpMethod.POST, "/api/v1/lessons/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.DELETE, "/api/v1/lessons/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/lessons/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
 
                         // --- user-service ---
                         .pathMatchers("/api/v1/super-admin/**").hasAuthority("SUPER_ADMIN")
-                        .pathMatchers("/api/v1/users/course-orders/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR","STUDENT")
-                        .pathMatchers("/api/v1/users/search")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR")
-                        .pathMatchers("/api/v1/users/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN")
-                        .pathMatchers("/api/v1/hr/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR")
-                        .pathMatchers("/api/v1/mentor/**")
-                        .hasAnyAuthority("MENTOR","ADMIN","SUPER_ADMIN")
+                        .pathMatchers("/api/v1/users/course-orders/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR","STUDENT")
+                        .pathMatchers("/api/v1/users/search").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR")
+                        .pathMatchers("/api/v1/users/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
+                        .pathMatchers("/api/v1/hr/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","HR")
+                        .pathMatchers("/api/v1/mentor/**").hasAnyAuthority("MENTOR","ADMIN","SUPER_ADMIN")
 
                         // --- forum-service ---
-                        .pathMatchers("/api/v1/forums/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR")
-                        .pathMatchers("/api/v1/forum/forum-topic/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
-                        .pathMatchers("/api/v1/forum/forum-comment/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
-                        .pathMatchers("/api/v1/forum/likes/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
-                        .pathMatchers("/api/v1/forum/complaints/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
-                        .pathMatchers("/api/v1/forum/moderation/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MODERATOR")
-                        .pathMatchers("/api/v1/forum/forbidden-words/**")
-                        .hasAnyAuthority("SUPER_ADMIN","ADMIN","MODERATOR")
+                        .pathMatchers("/api/v1/forums/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR")
+                        .pathMatchers("/api/v1/forum/forum-topic/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
+                        .pathMatchers("/api/v1/forum/forum-comment/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
+                        .pathMatchers("/api/v1/forum/likes/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
+                        .pathMatchers("/api/v1/forum/complaints/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MENTOR","STUDENT")
+                        .pathMatchers("/api/v1/forum/moderation/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MODERATOR")
+                        .pathMatchers("/api/v1/forum/forbidden-words/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","MODERATOR")
 
                         // прочее — требуем аутентификацию
                         .anyExchange().authenticated()

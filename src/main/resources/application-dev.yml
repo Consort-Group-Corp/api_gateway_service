@@ -7,6 +7,7 @@ spring:
 
   application:
     name: api-gateway-service
+
   cloud:
     gateway:
       globalcors:
@@ -21,13 +22,13 @@ spring:
             allowed-headers: "*"
             allow-credentials: true
             max-age: 7200
+
       routes:
+        # ── API routes ─────────────────────────────────────────────
         - id: user-auth
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/auth/**,/api/v1/user/registration/**,/api/v1/hr/**,/api/v1/mentor/**,/api/v1/oneid/**,
-              /api/v1/password/**,/api/v1/super-admin/**,/api/v1/users/**,/api/v1/device-tokens/**,
-              /api/v1/users/notifications/**,/api/v1/user-notifications/**
+            - Path=/api/v1/auth/**,/api/v1/user/registration/**,/api/v1/hr/**,/api/v1/mentor/**,/api/v1/oneid/**,/api/v1/password/**,/api/v1/super-admin/**,/api/v1/users/**,/api/v1/device-tokens/**,/api/v1/users/notifications/**,/api/v1/user-notifications/**
 
         - id: course-service
           uri: lb://course-service
@@ -54,48 +55,75 @@ spring:
           predicates:
             - Path=/api/v1/support/**
 
-        # Swagger routes
+        # ── Swagger API-docs proxy (анонимный доступ)
         - id: user-swagger
           uri: lb://user-service
           predicates:
             - Path=/user/v3/api-docs/**
           filters:
-            - RewritePath=/user/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: course-swagger
           uri: lb://course-service
           predicates:
             - Path=/course/v3/api-docs/**
           filters:
-            - RewritePath=/course/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/course/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: forum-swagger
           uri: lb://forum-service
           predicates:
             - Path=/forum/v3/api-docs/**
           filters:
-            - RewritePath=/forum/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/forum/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: webinar-swagger
           uri: lb://webinar-service
           predicates:
             - Path=/webinar/v3/api-docs/**
           filters:
-            - RewritePath=/webinar/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/webinar/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: payment-swagger
           uri: lb://payment-service
           predicates:
             - Path=/payment/v3/api-docs/**
           filters:
-            - RewritePath=/payment/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/payment/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: support-swagger
           uri: lb://support-service
           predicates:
             - Path=/support/v3/api-docs/**
           filters:
-            - RewritePath=/support/v3/api-docs(?<rem>/?.*),/v3/api-docs${rem}
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/support/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
+
+        # ── Swagger UI статика с CDN
+        - id: swagger-ui-resources
+          uri: https://cdn.jsdelivr.net
+          predicates:
+            - Path=/webjars/**
+          filters:
+            - RewritePath=/webjars/(?<segment>.*), /npm/swagger-ui-dist@5.9.0/${segment}
+
+        - id: swagger-ui-page
+          uri: http://localhost:8085
+          predicates:
+            - Path=/swagger-ui.html
+          filters:
+            - SetResponseHeader=Content-Type, text/html
 
       discovery:
         locator:
@@ -104,21 +132,22 @@ spring:
 
 springdoc:
   swagger-ui:
+    path: /swagger-ui.html
     disable-swagger-default-url: true
     urls:
-      - name: user-service
-        url: /user/v3/api-docs
-      - name: course-service
-        url: /course/v3/api-docs
-      - name: forum-service
-        url: /forum/v3/api-docs
-      - name: webinar-service
-        url: /webinar/v3/api-docs
-      - name: payment-service
-        url: /payment/v3/api-docs
-      - name: support-service
-        url: /support/v3/api-docs
-    urls-primary-name: forum-service
+      - url: /user/v3/api-docs
+        name: User Service
+      - url: /course/v3/api-docs
+        name: Course Service
+      - url: /forum/v3/api-docs
+        name: Forum Service
+      - url: /webinar/v3/api-docs
+        name: Webinar Service
+      - url: /payment/v3/api-docs
+        name: Payment Service
+      - url: /support/v3/api-docs
+        name: Support Service
+    urls-primary-name: user-service
     try-it-out-enabled: true
 
 security:
@@ -147,7 +176,8 @@ management:
 
 logging:
   level:
+    org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: TRACE
     org.springframework.web.reactive.HandlerMapping: TRACE
-    org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
+    org.springdoc: DEBUG

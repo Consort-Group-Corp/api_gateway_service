@@ -77,7 +77,37 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // public endpoints
-                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .pathMatchers(
+                                "/v3/api-docs/",
+                                "/v3/api-docs/swagger-config",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/webjars/**",
+                                "/user/v3/api-docs",
+                                "/user/v3/api-docs/**",
+                                "/course/v3/api-docs",
+                                "/course/v3/api-docs/**",
+                                "/forum/v3/api-docs",
+                                "/forum/v3/api-docs/**",
+                                "/webinar/v3/api-docs",
+                                "/webinar/v3/api-docs/**",
+                                "/payment/v3/api-docs",
+                                "/payment/v3/api-docs/**",
+                                "/support/v3/api-docs",
+                                "/support/v3/api-docs/**"
+                        ).permitAll()
+
+                        .pathMatchers(
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs/swagger-config",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/webjars/**",
+                                "/actuator/health",
+                                "/actuator/health/**"
+                        ).permitAll()
+
                         .pathMatchers("/actuator/health").permitAll()
                         .pathMatchers("/api/v1/device-tokens/**").permitAll()
                         .pathMatchers("/api/v1/password/**").permitAll()

@@ -35,6 +35,11 @@ spring:
           predicates:
             - Path=/api/v1/courses/**,/api/v1/lessons/**
 
+        - id: certificate-service
+          uri: lb://certificate-service
+          predicates:
+            - Path=/api/v1/certificates/**
+
         - id: forum-service
           uri: lb://forum-service
           predicates:
@@ -73,6 +78,15 @@ spring:
             - RemoveRequestHeader=Authorization
             - RemoveRequestHeader=Cookie
             - RewritePath=/course/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
+
+        - id: certificate-swagger
+          uri: lb://certificate-service
+          predicates:
+            - Path=/certificate/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Authorization
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/certificate/v3/api-docs(?<segment>/?.*), /v3/api-docs${segment}
 
         - id: forum-swagger
           uri: lb://forum-service
@@ -139,6 +153,8 @@ springdoc:
         name: User Service
       - url: /course/v3/api-docs
         name: Course Service
+      - url: /certificate/v3/api-docs
+        name: Certificate Service
       - url: /forum/v3/api-docs
         name: Forum Service
       - url: /webinar/v3/api-docs

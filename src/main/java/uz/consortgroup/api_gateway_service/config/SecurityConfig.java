@@ -28,6 +28,9 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import reactor.core.publisher.Mono;
 import uz.consortgroup.api_gateway_service.security.JsonAccessDeniedHandler;
 import uz.consortgroup.api_gateway_service.security.JsonAuthenticationEntryPoint;
@@ -110,12 +113,14 @@ public class SecurityConfig {
 
                         .pathMatchers("/actuator/health").permitAll()
                         .pathMatchers("/api/v1/device-tokens/**").permitAll()
-                        .pathMatchers("/api/v1/password/**").permitAll()
                         .pathMatchers("/api/v1/users/registration/**").permitAll()
                         .pathMatchers("/api/v1/users/*/verification").permitAll()
                         .pathMatchers("/api/v1/users/*/new-verification-code").permitAll()
-                        .pathMatchers("/api/v1/users/*/new-password").permitAll()
-                        .pathMatchers("/api/certificates/**").permitAll() //TODO Закроем после тестирование
+                        .pathMatchers("/api/v1/password/recovery/anonymous").permitAll()
+
+                        // только с токеном (дальше использует AuthContext)
+                        .pathMatchers("/api/v1/password/recovery").authenticated()
+                        .pathMatchers("/api/v1/password/new-password").authenticated()
 
                         // auth
                         .pathMatchers("/api/v1/auth/**").permitAll()
@@ -184,6 +189,27 @@ public class SecurityConfig {
                         )
                 )
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://0.0.0.0:*",
+                "http://164.92.247.120:*",
+                "https://164.92.247.120:*"
+        ));
+        cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"));
+        cors.setAllowedHeaders(List.of("*"));
+        cors.setExposedHeaders(List.of("Authorization","Content-Disposition","Location","X-Total-Count","Content-Range"));
+        cors.setAllowCredentials(true);
+        cors.setMaxAge(7200L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
     }
 
     private Collection<? extends GrantedAuthority> mapAuthorities(Jwt jwt) {

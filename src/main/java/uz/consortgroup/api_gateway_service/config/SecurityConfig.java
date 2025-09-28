@@ -118,6 +118,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/users/*/new-verification-code").permitAll()
                         .pathMatchers("/api/v1/password/recovery/anonymous").permitAll()
                         .pathMatchers("/api/certificates/**").permitAll() //TODO Закроем после тестирование
+                        .pathMatchers("/api/v1/users-full-info/**").permitAll()
 
                         // только с токеном (дальше использует AuthContext)
                         .pathMatchers("/api/v1/password/recovery").authenticated()

@@ -90,6 +90,8 @@ public class SecurityConfig {
                                 "/user/v3/api-docs/**",
                                 "/course/v3/api-docs",
                                 "/course/v3/api-docs/**",
+                                "/certificate/v3/api-docs",
+                                "/certificate/v3/api-docs/**",
                                 "/forum/v3/api-docs",
                                 "/forum/v3/api-docs/**",
                                 "/webinar/v3/api-docs",
@@ -117,7 +119,6 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/users/*/verification").permitAll()
                         .pathMatchers("/api/v1/users/*/new-verification-code").permitAll()
                         .pathMatchers("/api/v1/password/recovery/anonymous").permitAll()
-                        .pathMatchers("/api/certificates/**").permitAll() //TODO Закроем после тестирование
                         .pathMatchers("/api/v1/users-full-info/**").permitAll()
 
                         // только с токеном (дальше использует AuthContext)
@@ -149,6 +150,11 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
                         .pathMatchers(HttpMethod.DELETE, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
                         .pathMatchers(HttpMethod.GET, "/api/v1/courses/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
+
+                        // --- certificate-service ---
+                        .pathMatchers(HttpMethod.POST, "/api/v1/certificate/**").hasAnyAuthority("SUPER_ADMIN")
+                        .pathMatchers(HttpMethod.DELETE, "/api/v1/certificate/**").hasAnyAuthority("SUPER_ADMIN")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/certificate/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN", "MENTOR", "HR", "STUDENT")
 
                         // Исправленные пути для медиа-файлов уроков
                         .pathMatchers(HttpMethod.POST, "/api/v1/lessons/**").hasAnyAuthority("SUPER_ADMIN", "MENTOR")
